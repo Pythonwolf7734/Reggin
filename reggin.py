@@ -34,4 +34,4 @@ async def on_ready():
 
 
 
-client.run('ODY4Mzg2NTk3NjE0MjU2MTc5.YPu6Cg.sCBJX85U905RnlmCwykR52Qmg8Q')
+client.run('TOKEN')
