@@ -94,7 +94,10 @@ class User:
                 i += 1
             self.id = user_data[0]
             self.name = user_data[1]
-            self.clan = Clan(user_data[2])
+            if user_data[2] == 0:
+                self.clan = None
+            else:
+                self.clan = Clan(user_data[2])
             self.money = user_data[3]
             self.attack = user_data[5]
             self.health = user_data[6]
@@ -102,6 +105,9 @@ class User:
 
     def delete(self):
         cursor.execute("DELETE FROM users WHERE userid=?", (self.id,))
+        if self.clan != None:
+            cursor.execute("DELETE FROM clans WHERE owner=?", (self.id,))
+            cursor.execute("UPDATE users SET clan=? WHERE clan=?", (0, self.clan.id))
         connection.commit()
 
 
@@ -119,9 +125,24 @@ async def on_ready():
 
 @client.command()
 async def register(ctx):
-    cursor.execute("INSERT INTO  users VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, ctx.author.name, 0, 0, 0, 0, 0, 0))
-    connection.commit()
-    await ctx.send(f"Added {ctx.author.name} into database")
+    try:
+        user = User(ctx.author.id)
+    except:
+        cursor.execute("INSERT INTO  users VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, ctx.author.name, 0, 0, 0, 0, 0, 0))
+        connection.commit()
+        await ctx.send(f"Added {ctx.author.name} into database")
+    else:
+        await ctx.send("You are already in the databse")
+
+@client.command()
+async def delete(ctx):
+    try:
+        user = User(ctx.author.id)
+    except:
+        await ctx.send("You are not in the database")
+    else:
+        user.delete()
+        await ctx.send(f"Deleted {user.name}")
 
 
-client.run('TOKEN')
+client.run('Token')
