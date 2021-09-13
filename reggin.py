@@ -1,8 +1,10 @@
 import discord
+from discord_slash import SlashCommand, SlashContext
 from discord.ext import commands
 import sqlite3
 
 client = commands.Bot(command_prefix = 'reg:')
+slash = SlashCommand(client, sync_commands=True)
 
 #Utility functions
 def read_replace(read, type="db"):
@@ -78,6 +80,8 @@ class Clan:
         self.name = data[4]
         self.castle = data[5]
 
+    #def delete(self, id)
+
 
 class User:
 
@@ -123,8 +127,8 @@ async def on_ready():
     embed = discord.Embed(description = f"Bot online", color=discord.Colour(0xd4af37))
     await channel.send(embed=embed)
 
-@client.command()
-async def register(ctx):
+@slash.slash(name="register", description="Register yourself for the economy system")
+async def register(ctx: SlashContext):
     try:
         user = User(ctx.author.id)
     except:
@@ -134,8 +138,8 @@ async def register(ctx):
     else:
         await ctx.send("You are already in the databse")
 
-@client.command()
-async def delete(ctx):
+@slash.slash(name="delete", description="Delete your data from the economy system")
+async def delete(ctx: SlashContext):
     try:
         user = User(ctx.author.id)
     except:
