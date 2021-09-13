@@ -47,7 +47,7 @@ cursor = connection.cursor()
 #        clanid INT, public INT, owner INT, level INT, name TEXT, castle INT
 #    )""")   #Creating table with data for clans
 #cursor.execute("DELETE FROM clans")
-#cursor.execute("INSERT INTO  clans VALUES (?, ?, ?, ?, ?, ?)", (0, 1, 2, 3, 4, 5))
+#cursor.execute("INSERT INTO  clans VALUES (?, ?, ?, ?, ?, ?)", (0, 0, 0, 0, "All ids", 0))
 connection.commit()
 #cursor.execute("SELECT * FROM clans")
 #for x in cursor:
@@ -82,6 +82,11 @@ class Clan:
 
     #def delete(self, id)
 
+    def change_level(self, new_level):
+        cursor.execute("UPDATE clans SET level=? WHERE clanid=?", (new_level, self.id))
+        connection.commit()
+        self.level = new_level
+
 
 class User:
 
@@ -98,7 +103,8 @@ class User:
                 i += 1
             self.id = user_data[0]
             self.name = user_data[1]
-            if user_data[2] == 0:
+            print(user_data[2])
+            if user_data[2] == 0 or user_data[2] == "0":
                 self.clan = None
             else:
                 self.clan = Clan(user_data[2])
@@ -112,6 +118,10 @@ class User:
         if self.clan != None:
             cursor.execute("DELETE FROM clans WHERE owner=?", (self.id,))
             cursor.execute("UPDATE users SET clan=? WHERE clan=?", (0, self.clan.id))
+        connection.commit()
+
+    def set_clan(self, clan_id):
+        cursor.execute("UPDATE users SET clan=? WHERE userid=?", (clan_id, self.id))
         connection.commit()
 
 
@@ -142,6 +152,27 @@ class Slash(commands.Cog):
         else:
             user.delete()
             await ctx.send(f"Deleted {user.name}")
+
+    @cog_ext.cog_slash(name="createclan", description="Create your own clan!", options=[{"name": "name", "description": "Your clans name", "type": 3, "required": True}, {"name": "public", "description": "If your guild is public everyone can join the guild", "type": 5, "required": True}])
+    async def createclan(self, ctx: SlashContext, name, public):
+        try:
+            user = User(ctx.author.id)
+        except:
+            await ctx.send("You are not registered! Use /register to register you!", hidden=True)
+            return
+        if user.clan != None:
+            await ctx.send("You are already in a clan", hidden=True)
+            return
+        id_clan = Clan(0)
+        if public:
+            cursor.execute("INSERT INTO  clans VALUES (?, ?, ?, ?, ?, ?)", (id_clan.level+1, 1, ctx.author.id, 1, name, 0))
+        else:
+            cursor.execute("INSERT INTO  clans VALUES (?, ?, ?, ?, ?, ?)", (id_clan.level+1, 0, ctx.author.id, 1, name, 0))
+        connection.commit()
+        user.set_clan(id_clan.level+1)
+        user = User(ctx.author.id)
+        await ctx.send(f"Clan `{user.clan.name}` was created!")
+        id_clan.change_level(id_clan.level+1)
 
 def setup(bot):
     bot.add_cog(Slash(bot))
