@@ -80,7 +80,10 @@ class Clan:
         self.name = data[4]
         self.castle = data[5]
 
-    #def delete(self, id)
+    def delete(self):
+        cursor.execute("DELETE FROM clans WHERE clanid=?", (self.id,))
+        cursor.execute("UPDATE users SET clan=? WHERE clan=?", (0, self.id))
+        connection.commit()
 
     def change_level(self, new_level):
         cursor.execute("UPDATE clans SET level=? WHERE clanid=?", (new_level, self.id))
@@ -173,6 +176,23 @@ class Slash(commands.Cog):
         user = User(ctx.author.id)
         await ctx.send(f"Clan `{user.clan.name}` was created!")
         id_clan.change_level(id_clan.level+1)
+
+    @cog_ext.cog_slash(name="deleteclan", description="Delete your clan!")
+    async def deleteclan(self, ctx: SlashContext):
+        try:
+            user = User(ctx.author.id)
+        except:
+            await ctx.send("You are not registered! Use /register to register you!", hidden=True)
+            return
+        if user.clan == None:
+            await ctx.send("You don't own a clan!", hidden=True)
+            return
+        elif user.clan.owner != ctx.author.id:
+            await ctx.send("You don't own a clan!", hidden=True)
+            return
+        else:
+            user.clan.delete()
+            await ctx.send(f"Deleted your clan `{user.clan.name}`!")
 
 def setup(bot):
     bot.add_cog(Slash(bot))
