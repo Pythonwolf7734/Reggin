@@ -5,6 +5,7 @@ from discord_slash.utils.manage_commands import create_option, create_choice
 from discord_slash.utils.manage_components import create_button, create_actionrow
 from discord_slash.model import ButtonStyle
 import sqlite3
+import datetime
 
 #Utility functions
 def read_replace(read, type="db"):
@@ -115,6 +116,7 @@ class User:
             self.attack = user_data[5]
             self.health = user_data[6]
             self.defend = user_data[7]
+            self.last_daily = user_data[4]
 
     def delete(self):
         cursor.execute("DELETE FROM users WHERE userid=?", (self.id,))
@@ -125,6 +127,14 @@ class User:
 
     def set_clan(self, clan_id):
         cursor.execute("UPDATE users SET clan=? WHERE userid=?", (clan_id, self.id))
+        connection.commit()
+
+    def add_money(self, amount):
+        cursor.execute("UPDATE users SET money=? WHERE userid=?", (self.money+amount, self.id))
+        connection.commit()
+
+    def update_daily(self):
+        cursor.execute("UPDATE users SET lastDaily=? WHERE userid=?", (str(datetime.datetime.now()), self.id))
         connection.commit()
 
 
@@ -140,7 +150,8 @@ class Slash(commands.Cog):
         try:
             user = User(ctx.author.id)
         except:
-            cursor.execute("INSERT INTO  users VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, ctx.author.name, 0, 0, 0, 0, 0, 0))
+            time = datetime.datetime(year=2019, month=10, day=23, hour=6, minute=40, second=15)
+            cursor.execute("INSERT INTO  users VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, ctx.author.name, 0, 0, time, 0, 0, 0))
             connection.commit()
             await ctx.send(f"Added {ctx.author.name} into database")
         else:
@@ -193,6 +204,48 @@ class Slash(commands.Cog):
         else:
             user.clan.delete()
             await ctx.send(f"Deleted your clan `{user.clan.name}`!")
+
+    @cog_ext.cog_slash(name="money", description="See how rich you are")
+    async def _money(self, ctx: SlashContext):
+        try:
+            user = User(ctx.author.id)
+        except:
+            await ctx.send("You are not registered! Use /register to register you!", hidden=True)
+            return
+        else:
+            embed = discord.Embed(colour=discord.Colour(0xd4af37), description=f"You have {user.money} coins!")
+            await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(name="daily", description="Get your daily coins")
+    async def _daily(self, ctx: SlashContext):
+        try:
+            user = User(ctx.author.id)
+        except:
+            await ctx.send("You are not registered! Use /register to register you!", hidden=True)
+            return
+        else:
+            day_last = user.last_daily.split(" ")[0]
+            time_last = user.last_daily.split(" ")[1]
+            last_time = datetime.datetime(year=int(day_last.split("-")[0]), month=int(day_last.split("-")[1]), day=int(day_last.split("-")[2]), hour=int(time_last.split(":")[0]), minute=int(time_last.split(":")[1]))
+            time_diff = datetime.datetime.now() - last_time
+            if time_diff.days < 1:
+                to_wait = 24-(time_diff.seconds/3600)
+                to_wait = round(to_wait, 0)
+                to_wait = str(to_wait).split(".")[0]
+                if to_wait == 0:
+                    to_wait = 1440-(time_diff.seconds/60)
+                    to_wait = round(to_wait, 0)
+                    to_wait = str(to_wait).split(".")[0]
+                    embed = discord.Embed(colour=discord.Colour(0x359ae), description=f"You can claim your daily money again in {to_wait}min")
+                else:
+                    embed = discord.Embed(colour=discord.Colour(0x359ae), description=f"You can claim your daily money again in {to_wait}h")
+                    await ctx.send(embed=embed, hidden=True)
+                    return
+            else:
+                user.add_money(120)
+                user.update_daily()
+                embed = discord.Embed(colour=discord.Colour(0xd4af37), description=f"You claimed your 120 daily coins!")
+                await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Slash(bot))
