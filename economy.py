@@ -107,7 +107,6 @@ class User:
                 i += 1
             self.id = user_data[0]
             self.name = user_data[1]
-            print(user_data[2])
             if user_data[2] == 0 or user_data[2] == "0":
                 self.clan = None
             else:
@@ -242,7 +241,7 @@ class Slash(commands.Cog):
                     await ctx.send(embed=embed, hidden=True)
                     return
             else:
-                user.add_money(120)
+                user.add_money(69)
                 user.update_daily()
                 embed = discord.Embed(colour=discord.Colour(0xd4af37), description=f"You claimed your 120 daily coins!")
                 await ctx.send(embed=embed)
