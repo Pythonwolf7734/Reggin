@@ -38,11 +38,11 @@ def read_replace(read, type="db"):
 connection = sqlite3.connect("/media/pi/JONAH_3/Python/Discord_Bot/Regin/Reggin_data.db") #Opening Database
 cursor = connection.cursor()
 
-#cursor.execute("""CREATE TABLE users (
-#        userid INT, ing_name TEXT, clan INT, money INT, lastDaily TEXT, attack INT, health INT, defend INT
-#    )""")   #Creating table with data for users
+#cursor.execute("DROP TABLE users")
 
-#cursor.execute("DROP TABLE clans")
+#cursor.execute("""CREATE TABLE users (
+#        userid INT, ing_name TEXT, clan INT, money INT, lastDaily TEXT, attack INT, health INT, defend INT, dailyStrike INT
+#    )""")   #Creating table with data for users
 
 #cursor.execute("""CREATE TABLE clans (
 #        clanid INT, public INT, owner INT, level INT, name TEXT, castle INT
@@ -116,6 +116,7 @@ class User:
             self.health = user_data[6]
             self.defend = user_data[7]
             self.last_daily = user_data[4]
+            self.streak = user_data[8]
 
     def delete(self):
         cursor.execute("DELETE FROM users WHERE userid=?", (self.id,))
@@ -127,14 +128,23 @@ class User:
     def set_clan(self, clan_id):
         cursor.execute("UPDATE users SET clan=? WHERE userid=?", (clan_id, self.id))
         connection.commit()
+        self.clan = Clan(clan_id)
 
     def add_money(self, amount):
         cursor.execute("UPDATE users SET money=? WHERE userid=?", (self.money+amount, self.id))
         connection.commit()
+        self.money = self.money+amount
 
     def update_daily(self):
         cursor.execute("UPDATE users SET lastDaily=? WHERE userid=?", (str(datetime.datetime.now()), self.id))
         connection.commit()
+        self.last_daily = str(datetime.datetime.now())
+
+    def update_streak(self, streak):
+        cursor.execute("UPDATE users SET dailyStreak=? WHERE userid=?", (streak, self.id))
+        connection.commit()
+        self.streak = streak
+        
 
 
 #END Classes
@@ -150,7 +160,7 @@ class Slash(commands.Cog):
             user = User(ctx.author.id)
         except:
             time = datetime.datetime(year=2019, month=10, day=23, hour=6, minute=40, second=15)
-            cursor.execute("INSERT INTO  users VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, ctx.author.name, 0, 0, time, 0, 0, 0))
+            cursor.execute("INSERT INTO  users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (ctx.author.id, ctx.author.name, 0, 0, time, 0, 0, 0, 0))
             connection.commit()
             await ctx.send(f"Added {ctx.author.name} into database")
         else:
@@ -241,9 +251,22 @@ class Slash(commands.Cog):
                     await ctx.send(embed=embed, hidden=True)
                     return
             else:
-                user.add_money(69)
+                if time_diff.days > 2:
+                    money = 69
+                    if user.streak == 0:
+                        streak = "Claim your money again tomorrow to get a streak!"
+                    else:
+                        streak = f"Uff! Your streak broke. You had a streak of {user.streak}"
+                        user.update_streak(0)
+                else:
+                    streak = user.streak + 1
+                    user.update_streak(streak)
+                    money = 69 + (streak*10)
+                    streak = f"Your current streak is now {streak}"
+                user.add_money(money)
                 user.update_daily()
-                embed = discord.Embed(colour=discord.Colour(0xd4af37), description=f"You claimed your 120 daily coins!")
+                embed = discord.Embed(colour=discord.Colour(0xd4af37), description=f"You claimed your {money} daily coins!")
+                embed.set_footer(text=streak)
                 await ctx.send(embed=embed)
 
 def setup(bot):
