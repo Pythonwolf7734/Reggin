@@ -16,4 +16,5 @@ async def on_ready():
     await channel.send(embed=embed)
 
 client.load_extension('economy')
+client.load_extension('moderation')
 client.run('ODY4Mzg2NTk3NjE0MjU2MTc5.YPu6Cg.qKmdUQ0is4TyBP2puWKdOGSu_2k')

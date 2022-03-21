@@ -7,35 +7,8 @@ from discord_slash.model import ButtonStyle
 import sqlite3
 import datetime
 
-#Utility functions
-def read_replace(read, type="db"):
-    #read = str(read)
-    if type != "db":
-        read=str(read)
-    if type == "db":
-        if read is None:
-            return None
-        for r in read:
-            read = r
-    elif type == "userid":
-        read = read.replace(">", "")
-        read = read.replace("<@", "")
-        read = read.replace("!", "")
-    elif type == "channelid":
-        read = read.replace("<#", "")
-        read = read.replace(">", "")
-    elif type == "roleid":
-        read = read.replace("<", "")
-        read = read.replace("@", "")
-        read = read.replace("&", "")
-        read = read.replace(">", "")
-    return read
-#End utility functions
-
-
-
 #DATABASE CREATE
-connection = sqlite3.connect("/media/pi/JONAH_3/Python/Discord_Bot/Regin/Reggin_data.db") #Opening Database
+connection = sqlite3.connect("/media/pi/JONAH_31/Python/Discord_Bot/Regin/Reggin_data.db") #Opening Database
 cursor = connection.cursor()
 
 #cursor.execute("DROP TABLE users")
@@ -141,7 +114,7 @@ class User:
         self.last_daily = str(datetime.datetime.now())
 
     def update_streak(self, streak):
-        cursor.execute("UPDATE users SET dailyStreak=? WHERE userid=?", (streak, self.id))
+        cursor.execute("UPDATE users SET dailyStrike=? WHERE userid=?", (streak, self.id))
         connection.commit()
         self.streak = streak
         
