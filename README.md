@@ -10,7 +10,7 @@ Feel free to continue developing this bot!
 ## How to run:
 -Download Repo  
 -`pip3 install -r requirements.txt`  
--Insert your code in the main file `reggin.py`  
+-Insert your token in the main file `reggin.py`  
 -`python3 reggin.py`  
 
 ## Important note:
