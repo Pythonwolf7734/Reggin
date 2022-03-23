@@ -1,6 +1,8 @@
 # Reggin
-Reggin is a discord bot -  Still under developement
+Reggin is a stopped discord bot project. The code here was just the start and many more things were planned.
 
-Invite [here](https://discord.com/api/oauth2/authorize?client_id=868386597614256179&permissions=0&scope=bot%20applications.commands)
+Feel free to continue developing this bot!
 
 [Update March 2022]: Developement of Reggin stopped
+
+[Info]: The token in the commits is not valid, don't worry
